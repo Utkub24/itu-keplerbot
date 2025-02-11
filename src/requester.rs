@@ -1,6 +1,6 @@
-use chrono::{DateTime, FixedOffset, Utc};
+use chrono::{DateTime, FixedOffset, TimeDelta, Utc};
 use serde::{Deserialize, Serialize};
-use std::error::Error;
+use std::{error::Error, thread};
 
 use crate::cli::MakeConfigArgs;
 
@@ -51,8 +51,17 @@ impl Requester {
     pub fn run(&self) -> Result<(), Box<dyn Error>> {
         let now = Utc::now().with_timezone(&Config::TIMEZONE);
         println!("Şuan saat {}", now);
+        let until = self.config.time.signed_duration_since(now);
+        println!("Ders seçimine {} var", until);
 
-        println!();
+        const ONE_MINUTE_DELTA: TimeDelta =
+            TimeDelta::new(60, 0).expect("one minute delta should not fail");
+        let sleep_time = until - ONE_MINUTE_DELTA;
+        println!("Ders seçimine 1 dakika kalana kadar bekleniyor...");
+
+        thread::sleep(sleep_time.to_std().unwrap());
+
+        println!("TÜM DERSLERİ ALDIN OLEY");
 
         Ok(())
     }
