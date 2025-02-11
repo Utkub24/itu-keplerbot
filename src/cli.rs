@@ -1,8 +1,7 @@
-use std::path::PathBuf;
+use std::{error::Error, path::PathBuf, string::ParseError, time::SystemTime};
 
 use clap::{arg, command, Args, Parser, Subcommand};
-
-use crate::requester::Config;
+use humantime::parse_rfc3339_weak;
 
 #[derive(Parser, Debug)]
 pub struct Cli {
@@ -19,6 +18,13 @@ pub enum Command {
     Run(RunArgs), // TODO: add override args
 }
 
+fn parse_time(arg: &str) -> Result<std::time::Duration, ParseError> {
+    // TODO: Error handling
+    let time = parse_rfc3339_weak(arg).unwrap();
+
+    Ok(time.duration_since(SystemTime::UNIX_EPOCH).unwrap())
+}
+
 #[derive(Args, Debug, Clone)]
 pub struct MakeConfigArgs {
     #[arg(short = 'o', long = "output", help = "Output path")]
@@ -29,13 +35,9 @@ pub struct MakeConfigArgs {
 
     #[arg(short = 'p', long = "password", help = "ITÜ Kullanıcı Şifresi")]
     pub password: String,
-    // TODO: Add time
-}
 
-impl Into<Config> for MakeConfigArgs {
-    fn into(self) -> Config {
-        Config::new(self.username, self.password)
-    }
+    #[arg(short = 't', long = "time", help = "Ders Seçim Zamanı", value_parser = parse_time)]
+    pub time: std::time::Duration,
 }
 
 #[derive(Args, Debug)]

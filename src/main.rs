@@ -13,9 +13,10 @@ use cli::Cli;
 use requester::{Config, Requester};
 use serde_json;
 
-fn run_requester(config_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
-    let config_file = File::options().read(true).open(config_path)?;
+const DEFAULT_CONFIG_PATH: &str = "config.json";
 
+fn run_requester(config_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
+    let config_file = File::open(config_path)?;
     let config: Config = serde_json::from_reader(config_file)?;
     let requester = Requester::new(config);
 
@@ -31,7 +32,11 @@ fn write_config_to_file(file: &File, config: &Config) -> Result<(), Box<dyn std:
 
 fn write_config(output_path: &Path, config: &Config) -> Result<(), Box<dyn Error>> {
     match File::create_new(output_path) {
-        Ok(file) => write_config_to_file(&file, config),
+        Ok(file) => {
+            write_config_to_file(&file, config)?;
+            println!("Dosya {} konumuna yazıldı", output_path.display());
+            Ok(())
+        }
         Err(e) => match e.kind() {
             io::ErrorKind::AlreadyExists => {
                 println!("Dosya {} zaten var. Siliniyor...", output_path.display());
@@ -50,6 +55,7 @@ fn read_config_file(config_path: &Path) -> Result<(), Box<dyn Error>> {
     let file = File::open(config_path)?;
     let config: Config = serde_json::from_reader(file)?;
     println!("Read config: {:?}", config);
+    println!("Time is: {}", config.time);
     Ok(())
 }
 
@@ -70,7 +76,7 @@ fn main() {
             match read_config_file(
                 run_args
                     .config_path
-                    .unwrap_or(PathBuf::from("config.json"))
+                    .unwrap_or(PathBuf::from(DEFAULT_CONFIG_PATH))
                     .as_path(),
             ) {
                 Ok(_) => println!("yay read it!"),
