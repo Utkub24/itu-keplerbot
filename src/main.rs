@@ -20,12 +20,12 @@ fn run_requester(config_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
     let config: Config = serde_json::from_reader(config_file)?;
     let requester = Requester::new(config);
 
-    requester.say_hello();
+    requester.run();
 
     Ok(())
 }
 
-fn write_config_to_file(file: &File, config: &Config) -> Result<(), Box<dyn std::error::Error>> {
+fn write_config_to_file(file: &File, config: &Config) -> Result<(), Box<dyn Error>> {
     serde_json::to_writer(file, config)?;
     Ok(())
 }
@@ -73,15 +73,11 @@ fn main() {
             }
         }
         cli::Command::Run(run_args) => {
-            match read_config_file(
-                run_args
+            run_requester(
+                &run_args
                     .config_path
-                    .unwrap_or(PathBuf::from(DEFAULT_CONFIG_PATH))
-                    .as_path(),
-            ) {
-                Ok(_) => println!("yay read it!"),
-                Err(e) => eprintln!("{}", e),
-            }
+                    .unwrap_or(PathBuf::from(DEFAULT_CONFIG_PATH)),
+            );
         }
     }
 }

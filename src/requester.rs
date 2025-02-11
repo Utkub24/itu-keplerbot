@@ -1,10 +1,6 @@
-use chrono::{DateTime, FixedOffset, NaiveDateTime, Utc};
-use humantime::format_duration;
+use chrono::{DateTime, FixedOffset, Utc};
 use serde::{Deserialize, Serialize};
-use std::{
-    error::Error,
-    time::{Duration, SystemTime},
-};
+use std::error::Error;
 
 use crate::cli::MakeConfigArgs;
 
@@ -16,6 +12,9 @@ pub struct Config {
 }
 
 impl Config {
+    const TRT_OFFSET_SECONDS: i64 = 3 * 3600; // UTC+3 TRT
+    const TIMEZONE: FixedOffset = FixedOffset::east_opt(Self::TRT_OFFSET_SECONDS as i32)
+        .expect("TRT Timezone should not fail");
     pub fn new(username: String, password: String, time: chrono::DateTime<FixedOffset>) -> Self {
         Self {
             username,
@@ -28,14 +27,12 @@ impl Config {
 impl From<MakeConfigArgs> for Config {
     fn from(value: MakeConfigArgs) -> Self {
         // ASSUME INPUT IS IN UTC+3 TRT TIME
-        const TRT_OFFSET_SECONDS: i64 = 3 * 3600; // UTC+3 TRT
-        let offset = FixedOffset::east_opt(TRT_OFFSET_SECONDS as i32).unwrap();
         let time = DateTime::from_timestamp(
-            value.time.as_secs() as i64 - TRT_OFFSET_SECONDS,
+            value.time.as_secs() as i64 - Config::TRT_OFFSET_SECONDS,
             value.time.subsec_nanos(),
         )
         .unwrap()
-        .with_timezone(&offset);
+        .with_timezone(&Config::TIMEZONE);
 
         Config::new(value.username, value.password, time)
     }
@@ -51,16 +48,9 @@ impl Requester {
         Self { config }
     }
 
-    pub fn say_hello(&self) {
-        println!("hello!");
-    }
-
     pub fn run(&self) -> Result<(), Box<dyn Error>> {
-        let now = SystemTime::now();
-        println!(
-            "Şuan saat {}",
-            format_duration(now.duration_since(SystemTime::UNIX_EPOCH)?)
-        );
+        let now = Utc::now().with_timezone(&Config::TIMEZONE);
+        println!("Şuan saat {}", now);
 
         println!();
 
