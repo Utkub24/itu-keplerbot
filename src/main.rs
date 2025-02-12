@@ -16,6 +16,8 @@ use serde_json;
 const DEFAULT_CONFIG_PATH: &str = "config.json";
 
 fn run_requester(config_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
+    read_config_file(config_path)?;
+
     let config_file = File::open(config_path)?;
     let config: Config = serde_json::from_reader(config_file)?;
     let requester = Requester::new(config);

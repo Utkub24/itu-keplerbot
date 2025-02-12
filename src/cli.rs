@@ -38,6 +38,12 @@ pub struct MakeConfigArgs {
 
     #[arg(short = 't', long = "time", help = "Ders Seçim Zamanı", value_parser = parse_time)]
     pub time: std::time::Duration,
+
+    #[arg(long = "crn", help = "Eklenecek CRN'ler", value_delimiter = ',')]
+    pub crn_list: Vec<String>,
+
+    #[arg(long = "scrn", help = "Çıkartılacak CRN'ler", value_delimiter = ',')]
+    pub scrn_list: Vec<String>,
 }
 
 #[derive(Args, Debug)]

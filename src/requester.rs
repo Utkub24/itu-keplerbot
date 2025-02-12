@@ -9,17 +9,27 @@ pub struct Config {
     pub username: String,
     pub password: String,
     pub time: chrono::DateTime<FixedOffset>,
+    pub crn_list: Vec<String>,
+    pub scrn_list: Vec<String>,
 }
 
 impl Config {
     const TRT_OFFSET_SECONDS: i64 = 3 * 3600; // UTC+3 TRT
     const TRT_TIMEZONE: FixedOffset = FixedOffset::east_opt(Self::TRT_OFFSET_SECONDS as i32)
         .expect("TRT Timezone should not fail");
-    pub fn new(username: String, password: String, time: chrono::DateTime<FixedOffset>) -> Self {
+    pub fn new(
+        username: String,
+        password: String,
+        time: chrono::DateTime<FixedOffset>,
+        crn_list: Vec<String>,
+        scrn_list: Vec<String>,
+    ) -> Self {
         Self {
             username,
             password,
             time,
+            crn_list,
+            scrn_list,
         }
     }
 }
@@ -34,7 +44,13 @@ impl From<MakeConfigArgs> for Config {
         .unwrap()
         .with_timezone(&Config::TRT_TIMEZONE);
 
-        Config::new(value.username, value.password, time)
+        Config::new(
+            value.username,
+            value.password,
+            time,
+            value.crn_list,
+            value.scrn_list,
+        )
     }
 }
 
