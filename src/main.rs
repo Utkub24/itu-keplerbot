@@ -15,14 +15,14 @@ use serde_json;
 
 const DEFAULT_CONFIG_PATH: &str = "config.json";
 
-fn run_requester(config_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
+async fn run_requester(config_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
     read_config_file(config_path)?;
 
     let config_file = File::open(config_path)?;
     let config: Config = serde_json::from_reader(config_file)?;
     let requester = Requester::new(config);
 
-    requester.run();
+    requester.run().await?;
 
     Ok(())
 }
@@ -61,7 +61,8 @@ fn read_config_file(config_path: &Path) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let cli = Cli::parse();
 
     match cli.command {
@@ -79,7 +80,8 @@ fn main() {
                 &run_args
                     .config_path
                     .unwrap_or(PathBuf::from(DEFAULT_CONFIG_PATH)),
-            );
+            )
+            .await;
         }
     }
 }

@@ -1,8 +1,25 @@
 use chrono::{DateTime, FixedOffset, TimeDelta, Utc};
+use reqwest::{Client, Request, RequestBuilder, Response};
 use serde::{Deserialize, Serialize};
-use std::{error::Error, thread};
+use std::{error::Error, fmt::Debug, thread};
 
 use crate::cli::MakeConfigArgs;
+
+#[allow(non_snake_case)]
+#[derive(Debug, Serialize, Deserialize)]
+struct RequestBody {
+    ECRN: Vec<String>,
+    SCRN: Vec<String>,
+}
+
+impl RequestBody {
+    pub fn new(crn_list: Vec<String>, scrn_list: Vec<String>) -> Self {
+        Self {
+            ECRN: crn_list,
+            SCRN: scrn_list,
+        }
+    }
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
@@ -57,6 +74,7 @@ impl From<MakeConfigArgs> for Config {
 #[derive(Debug)]
 pub struct Requester {
     config: Config,
+    client: Client,
 }
 
 fn now_trt() -> DateTime<FixedOffset> {
@@ -68,11 +86,16 @@ fn print_time_trt() {
 }
 
 impl Requester {
+    const COURSE_SELECT_URL: &str = "https://obs.itu.edu.tr/api/ders-kayit/v21/";
+
     pub fn new(config: Config) -> Self {
-        Self { config }
+        Self {
+            config,
+            client: Client::new(),
+        }
     }
 
-    pub fn run(&self) -> Result<(), Box<dyn Error>> {
+    pub async fn run(&self) -> Result<(), Box<dyn Error>> {
         print_time_trt();
         let now = now_trt();
         let until = self.config.time.signed_duration_since(now);
@@ -93,7 +116,31 @@ impl Requester {
         print_time_trt();
 
         println!("Mock Fetch JWT");
+        let jwt = "JWT";
+
+        let request = self.build_course_selection_request(jwt)?;
+        println!("Sending request...");
+        let res = self.send_request(&request).await?;
+        println!("{:?}", res);
 
         Ok(())
+    }
+
+    fn build_course_selection_request(&self, jwt: &str) -> Result<Request, Box<dyn Error>> {
+        let request_body =
+            RequestBody::new(self.config.crn_list.clone(), self.config.scrn_list.clone());
+
+        Ok(self
+            .client
+            .post(Self::COURSE_SELECT_URL)
+            .bearer_auth(jwt)
+            .json(&request_body)
+            .build()?)
+    }
+
+    async fn send_request(&self, request: &Request) -> Result<Response, reqwest::Error> {
+        RequestBuilder::from_parts(self.client.clone(), request.try_clone().unwrap())
+            .send()
+            .await
     }
 }
