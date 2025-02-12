@@ -22,7 +22,7 @@ async fn run_requester(config_path: &Path) -> Result<(), Box<dyn std::error::Err
     let config: Config = serde_json::from_reader(config_file)?;
     let requester = Requester::new(config);
 
-    requester.run().await?;
+    requester.fetch_jwt().await?;
 
     Ok(())
 }
