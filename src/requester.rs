@@ -7,12 +7,12 @@ use crate::cli::MakeConfigArgs;
 
 #[allow(non_snake_case)]
 #[derive(Debug, Serialize, Deserialize)]
-struct RequestBody {
+struct CourseSelectionRequestBody {
     ECRN: Vec<String>,
     SCRN: Vec<String>,
 }
 
-impl RequestBody {
+impl CourseSelectionRequestBody {
     pub fn new(crn_list: Vec<String>, scrn_list: Vec<String>) -> Self {
         Self {
             ECRN: crn_list,
@@ -21,7 +21,13 @@ impl RequestBody {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+impl From<Config> for CourseSelectionRequestBody {
+    fn from(config: Config) -> Self {
+        Self::new(config.crn_list, config.scrn_list)
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Config {
     pub username: String,
     pub password: String,
@@ -116,26 +122,26 @@ impl Requester {
         print_time_trt();
 
         println!("Mock Fetch JWT");
-        let jwt = "JWT";
+        let jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6Iml0dVxcYmljZXIyMiIsImRpc3BsYXlfbmFtZSI6IlV0a3UgQmnDp2VyIiwic2Vzc2lvbiI6IjI5YWYwMjJiLTVlZTYtNGQ5OS1hYjZmLTU1MjRkZTkyNjcxYSIsInJvbGUiOlsibGlzYW5zIiwib2dyZW5jaSJdLCJpZGVudGl0eSI6IjE1MDIyMDA3MSIsIm5iZiI6MTczOTM5MDQwNywiZXhwIjoxNzM5NDExNzMxLCJpYXQiOjE3MzkzOTA0MDd9.bYcoivIKG6ZXngQc2Nbn8eBMLo0Yinn9yxCrAPj7lI0";
 
         let request = self.build_course_selection_request(jwt)?;
         println!("Sending request...");
         let res = self.send_request(&request).await?;
         println!("{:?}", res);
+        let text = res.text().await?;
+        println!("{}", text);
 
         Ok(())
     }
 
-    fn build_course_selection_request(&self, jwt: &str) -> Result<Request, Box<dyn Error>> {
-        let request_body =
-            RequestBody::new(self.config.crn_list.clone(), self.config.scrn_list.clone());
+    fn build_course_selection_request(&self, jwt: &str) -> reqwest::Result<Request> {
+        let request_body = CourseSelectionRequestBody::from(self.config.clone());
 
-        Ok(self
-            .client
+        self.client
             .post(Self::COURSE_SELECT_URL)
             .bearer_auth(jwt)
             .json(&request_body)
-            .build()?)
+            .build()
     }
 
     async fn send_request(&self, request: &Request) -> Result<Response, reqwest::Error> {
