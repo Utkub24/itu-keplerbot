@@ -1,8 +1,11 @@
 use chrono::{DateTime, FixedOffset, TimeDelta, Utc};
-use reqwest::{Client, Request, RequestBuilder, Response, StatusCode};
+use reqwest::{
+    cookie::{CookieStore, Jar},
+    Client, Request, RequestBuilder, Response, StatusCode, Url,
+};
 use scraper::{Html, Selector};
 use serde::{Deserialize, Serialize};
-use std::{error::Error, fmt::Debug, ops::Deref, thread};
+use std::{error::Error, fmt::Debug, ops::Deref, str::FromStr, sync::Arc, thread};
 
 use crate::cli::MakeConfigArgs;
 
@@ -199,6 +202,7 @@ impl From<MakeConfigArgs> for Config {
 pub struct Requester {
     config: Config,
     client: Client,
+    jar: Arc<Jar>,
 }
 
 fn now_trt() -> DateTime<FixedOffset> {
@@ -215,11 +219,16 @@ impl Requester {
     const FETCH_JWT_URL: &str = "https://obs.itu.edu.tr/ogrenci/auth/jwt";
 
     pub fn new(config: Config) -> Self {
+        let jar = Arc::new(Jar::default());
         let client = Client::builder()
-            .cookie_store(true)
+            .cookie_provider(Arc::clone(&jar))
             .build()
             .expect("Client::builder()");
-        Self { config, client }
+        Self {
+            config,
+            client,
+            jar: Arc::clone(&jar),
+        }
     }
 
     pub async fn run(&self) -> Result<(), Box<dyn Error>> {
@@ -243,7 +252,7 @@ impl Requester {
         print_time_trt();
 
         println!("Mock Fetch JWT");
-        let jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6Iml0dVxcYmljZXIyMiIsImRpc3BsYXlfbmFtZSI6IlV0a3UgQmnDp2VyIiwic2Vzc2lvbiI6IjI5YWYwMjJiLTVlZTYtNGQ5OS1hYjZmLTU1MjRkZTkyNjcxYSIsInJvbGUiOlsibGlzYW5zIiwib2dyZW5jaSJdLCJpZGVudGl0eSI6IjE1MDIyMDA3MSIsIm5iZiI6MTczOTM5MDQwNywiZXhwIjoxNzM5NDExNzMxLCJpYXQiOjE3MzkzOTA0MDd9.bYcoivIKG6ZXngQc2Nbn8eBMLo0Yinn9yxCrAPj7lI0";
+        let jwt = "JWT";
 
         let request = self.build_course_selection_request(jwt)?;
         println!("Sending request...");
@@ -321,7 +330,23 @@ impl Requester {
 
         if auth_res.status().is_success() {
             println!("Başarıyla giriş yapıldı!");
+            println!("JWT alınıyor...");
         }
+
+        // first request sets cookies
+        let jwt_cookie_res = self.client.get(Self::FETCH_JWT_URL).send().await?;
+        println!("{:?}", jwt_cookie_res);
+
+        // second requests fetches JWT
+        let jwt_res = self.client.get(Self::FETCH_JWT_URL).send().await?;
+
+        let jwt = jwt_res.text().await?;
+
+        let request = self.build_course_selection_request(&jwt)?;
+        let res = self.send_request(&request).await?;
+
+        println!("{:?}", res);
+        println!("{:?}", res.text().await?);
 
         Ok(())
     }
