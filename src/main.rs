@@ -1,4 +1,6 @@
 mod cli;
+mod course;
+mod login;
 mod requester;
 
 use std::{
@@ -21,6 +23,8 @@ async fn run_requester(config_path: &Path) -> Result<(), Box<dyn std::error::Err
     let config_file = File::open(config_path)?;
     let config: Config = serde_json::from_reader(config_file)?;
     let requester = Requester::new(config);
+
+    requester.run().await?;
 
     Ok(())
 }
@@ -74,12 +78,16 @@ async fn main() {
             }
         }
         cli::Command::Run(run_args) => {
-            run_requester(
+            match run_requester(
                 &run_args
                     .config_path
                     .unwrap_or(PathBuf::from(DEFAULT_CONFIG_PATH)),
             )
-            .await;
+            .await
+            {
+                Ok(_) => println!("success!"),
+                Err(e) => eprintln!("{}", e),
+            }
         }
     }
 }
