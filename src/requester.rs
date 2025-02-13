@@ -64,7 +64,6 @@ impl From<MakeConfigArgs> for Config {
 pub struct Requester {
     config: Config,
     client: Client,
-    jar: Arc<Jar>,
 }
 
 fn now_trt() -> DateTime<FixedOffset> {
@@ -81,19 +80,22 @@ impl Requester {
     const FETCH_JWT_URL: &str = "https://obs.itu.edu.tr/ogrenci/auth/jwt";
 
     pub fn new(config: Config) -> Self {
-        let jar = Arc::new(Jar::default());
         let client = Client::builder()
-            .cookie_provider(Arc::clone(&jar))
+            .cookie_store(true)
             .build()
             .expect("Client::builder()");
-        Self {
-            config,
-            client,
-            jar: Arc::clone(&jar),
-        }
+        Self { config, client }
     }
 
     pub async fn run(&self) -> Result<(), Box<dyn Error>> {
+        let text = "{\"ecrnResultList\":[{\"crn\":\"22612\",\"operationFinished\":true,\"statusCode\":0,\"resultCode\":\"Ekleme İşlemi Başarılı\",\"resultData\":{}}],\"scrnResultList\":[{\"crn\":\"22612\",\"operationFinished\":true,\"statusCode\":0,\"resultCode\":\"Silme İşlemi Başarılı\",\"resultData\":{}}]}";
+
+        let test: CourseSelectionResponseBody = serde_json::from_str(&text)?;
+
+        println!("{:?}", test);
+
+        return Ok(());
+
         print_time_trt();
         let now = now_trt();
         let until = self.config.time.signed_duration_since(now);
