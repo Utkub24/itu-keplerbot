@@ -251,11 +251,12 @@ impl Requester {
 
         print_time_trt();
 
-        println!("Mock Fetch JWT");
-        let jwt = "JWT";
+        println!("API Token alınıyor...");
+        let jwt = self.fetch_jwt().await?;
+        println!("API Token başarılı bir şekilde alındı");
+        let request = self.build_course_selection_request(&jwt)?;
 
-        let request = self.build_course_selection_request(jwt)?;
-        println!("Sending request...");
+        println!("Ders seçiliyor...");
         let res = self.send_request(&request).await?;
         println!("{:?}", res);
         let text = res.text().await?;
@@ -264,12 +265,7 @@ impl Requester {
         Ok(())
     }
 
-    pub async fn fetch_jwt(&self) -> Result<(), reqwest::Error> {
-        let login_page_res = self.client.get(Self::LOGIN_URL).send().await?;
-        let referer_url = login_page_res.url().to_string();
-        let body = login_page_res.text().await?;
-        let document = Html::parse_document(&body);
-
+    fn build_login_form_hidden_fields(document: Html) -> LoginFormHiddenFields {
         let event_target_selector = Selector::parse("input[name='__EVENTTARGET']").unwrap();
         let event_target = document
             .select(&event_target_selector)
@@ -306,49 +302,49 @@ impl Requester {
             .and_then(|el| el.value().attr("value"))
             .unwrap_or_default();
 
-        let hidden_fields = LoginFormHiddenFields::new(
+        LoginFormHiddenFields::new(
             event_target.to_string(),
             event_argument.to_string(),
             viewstate.to_string(),
             viewstate_generator.to_string(),
             event_validation.to_string(),
-        );
+        )
+    }
 
-        let input_fields = LoginFormInputFields::from(self.config.clone());
+    fn build_login_form(document: Html, config: Config) -> LoginFormBody {
+        let hidden_fields = Self::build_login_form_hidden_fields(document);
+        let input_fields = LoginFormInputFields::from(config);
 
-        let login_form = LoginFormBody::new(hidden_fields, input_fields);
+        LoginFormBody::new(hidden_fields, input_fields)
+    }
 
-        println!("Referer {}", referer_url);
+    async fn login(&self) -> Result<Response, reqwest::Error> {
+        let login_page_res = self.client.get(Self::LOGIN_URL).send().await?;
+        let referer_url = login_page_res.url().to_string();
+        let body = login_page_res.text().await?;
+        let document = Html::parse_document(&body);
 
-        let auth_res = self
+        let login_form = Self::build_login_form(document, self.config.clone());
+
+        Ok(self
             .client
             .post(&referer_url)
             .header("Referer", referer_url)
             .form(&login_form)
             .send()
-            .await?;
+            .await?)
+    }
 
-        if auth_res.status().is_success() {
-            println!("Başarıyla giriş yapıldı!");
-            println!("JWT alınıyor...");
-        }
+    async fn fetch_jwt(&self) -> Result<String, reqwest::Error> {
+        self.login().await?; // TODO: check if already logged in (?)
 
         // first request sets cookies
-        let jwt_cookie_res = self.client.get(Self::FETCH_JWT_URL).send().await?;
-        println!("{:?}", jwt_cookie_res);
+        let _ = self.client.get(Self::FETCH_JWT_URL).send().await?;
 
         // second requests fetches JWT
-        let jwt_res = self.client.get(Self::FETCH_JWT_URL).send().await?;
+        let res = self.client.get(Self::FETCH_JWT_URL).send().await?;
 
-        let jwt = jwt_res.text().await?;
-
-        let request = self.build_course_selection_request(&jwt)?;
-        let res = self.send_request(&request).await?;
-
-        println!("{:?}", res);
-        println!("{:?}", res.text().await?);
-
-        Ok(())
+        Ok(res.text().await?)
     }
 
     fn build_course_selection_request(&self, jwt: &str) -> reqwest::Result<Request> {
