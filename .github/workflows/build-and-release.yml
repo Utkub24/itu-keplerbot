@@ -22,9 +22,7 @@ jobs:
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             binary_extension: '.exe'
-          - os: macos-latest-xlarge
-            target: aarch64-apple-darwin
-            binary_extension: ''
+
     runs-on: ${{ matrix.os }}
     permissions:
       contents: write
