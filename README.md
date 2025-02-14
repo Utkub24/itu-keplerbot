@@ -8,9 +8,12 @@
 
 1. Öncelikle sayfanın sağındaki 'Releases' kısmından uygulamanın son versiyonunu indirin. Windows kullanıyorsanız `itu-keplerbot.exe` adlı dosyayı, Linux kullanıyorsanız ise `itu-keplerbot` adlı dosyayı indirmelisiniz.
 
+> [!NOTE]  
+> MacOS kullanan arkadaşlar uygulamayı [kendileri derlemelidirler](#derlemek-için). Maalesef GitHub ücretsiz bir şekilde MacOS runner sağlamıyor :(
+
 2. Şimdi gerekli bilgileri programa girmelisiniz. Bunu komut satırını kullanarak veya elle girerek yapabilirsiniz.
 
-#### Komut Satırı İle Bilgi Girme ***ÖNERİLİR***
+### Komut Satırı İle Bilgi Girme ***ÖNERİLİR***
 
 Aşağıdaki komut ile bilgileriniz girebilirsiniz
 
@@ -24,7 +27,7 @@ CRN almak veya bırakmak istemiyorsanız `--crn` / `--scrn` alanlarını yazman�
 > Saat kısmını belirtilen formatta girmelisiniz -> "YIL-AY-GÜN SAAT:DAKİKA:SANİYE"
 
 
-##### Örnek Komut
+#### Örnek Komut
 
 ```bash
 itu-keplerbot make-config -u bicer22 -p 123şifre -t "2025-02-10 14:00:00" --crn 22612,22614,22609 --scrn 20399
@@ -38,7 +41,7 @@ itu-keplerbot make-config -u bicer22 -p 123şifre -t "2025-02-10 14:00:00" --crn
 
 Bu komut programı çalıştırdığınız yerde `config.json` adında bir dosya oluşturacaktır. Artık uygulama çalıştırılmaya hazır.
 
-#### Manuel Bilgi Girme
+### Manuel Bilgi Girme
 
 İndirdiğiniz program ile aynı klasörde `config.json` adında bir dosya oluşturun.
 
@@ -54,7 +57,7 @@ Oluşturulan `config.json` aşağıdaki şablona uyacak şekilde doldurulmalıd�
 }
 ```
 
-##### Örnek `config.json`
+#### Örnek `config.json`
 
 ```json
 {
@@ -101,3 +104,28 @@ itu-keplerbot run --config <JSON_DOSYASI_KONUMU>
 ## Teşekkür
 
 Ata'nın yaptığı uygulama benim için önemli bir kaynaktı, teşekkürler :) [Yıldızlamayı unutmayın!](https://github.com/AtaTrkgl/itu-ders-secici)
+
+
+## Derlemek İçin
+
+1. Eğer yüklü değilse, Rust ve gerekli aletleri indrin -> [Buradan indirebilirsiniz](https://www.rust-lang.org/tools/install)
+
+2. Repo'yu klonlayın
+
+```bash
+git clone https://github.com/Utkub24/itu-keplerbot.git
+```
+
+3. Komut satırından klonladığınız klasöre gidip `cargo` kullanarak derleyebilirsiniz.
+
+Sadece derlemek için:
+
+```bash
+cargo build
+```
+
+Derleyip çalıştırmak için:
+
+```bash
+cargo run
+```
