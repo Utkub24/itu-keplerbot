@@ -92,7 +92,7 @@ impl Requester {
 
         let test: CourseSelectionResponseBody = serde_json::from_str(&text)?;
 
-        println!("{:?}", test);
+        println!("{}", test);
 
         return Ok(());
 

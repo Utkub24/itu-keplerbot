@@ -1,3 +1,5 @@
+use std::fmt::{write, Display};
+
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -120,14 +122,94 @@ enum KnownResultCode {
     SuccessfullyDropped,
 }
 
+impl KnownResultCode {
+    pub fn description(&self) -> &'static str {
+        match self {
+            KnownResultCode::SuccessResult => "İşlem başarıyla tamamlandı.",
+            KnownResultCode::GenericError1 | KnownResultCode::None => "Operasyon tamamlanamadı.",
+            KnownResultCode::GenericError2 => "Bir hata meydana geldi.",
+            KnownResultCode::GenericError3 => "Bir problemden dolayı alınamadı",
+            KnownResultCode::TimeBlock1 | KnownResultCode::TimeBlock2 => {
+                "Kayıt zaman engelinden dolayı alınamadı"
+            }
+            KnownResultCode::AlreadyAddedThisTerm => {
+                "Bu dönem zaten alındığından dolayı tekrar alınmadı."
+            }
+            KnownResultCode::NotInCoursePlan => "Ders planında yer almadığından dolayı alınamadı.",
+            KnownResultCode::OverMaximumCreditLimit => {
+                "Dönemlik maksimum kredi sınırını aştığından dolayı alınamadı."
+            }
+            KnownResultCode::InsufficientQuota1 | KnownResultCode::InsufficientQuota2 => {
+                "Kontenjan yetersizliğinden dolayı alınamadı."
+            }
+            KnownResultCode::PassedBeforeAA => {
+                "Daha önce AA notuyla verildiğinden dolayı alınamadı."
+            }
+            KnownResultCode::WrongDegreeProgram => {
+                "Program şartını sağlamadığından dolayı alınamadı."
+            }
+            KnownResultCode::CourseConflict => "Başka bir dersle çakıştığından dolayı alınamadı.",
+            KnownResultCode::CourseNotRegisteredNoOp => {
+                "Derse kayıtlı olmadığınızdan dolayı hiç bir işlem yapılmadı."
+            }
+            KnownResultCode::RequirementsNotMet => "Önşartlardan dolayı alınamadı.",
+            KnownResultCode::CourseNotOpened => {
+                "Şu anki dönemde hiç açılmadığından dolayı alınamadı."
+            }
+            KnownResultCode::TemporarilyBlocked => {
+                "Geçici olarak engellenmiş olması sebebiyle alınamadı."
+            }
+            KnownResultCode::SystemNoAnswer | KnownResultCode::ErrorLoad => {
+                "Sistem geçici olarak yanıt vermiyor."
+            }
+            KnownResultCode::Max12Crn => "Maksimum 12 CRN alabilirsiniz,",
+            KnownResultCode::ProcessOngoing => {
+                "Aktif bir işleminiz devam ettiğinden dolayı işlem yapılmadı."
+            }
+            KnownResultCode::Blocked => "Engellendiğinden dolayı alınamadı.",
+            KnownResultCode::CanNotTakeAssociateCourse => {
+                "Önlisans dersi olduğundan dolayı alınamadı."
+            }
+            KnownResultCode::MustHaveAtLeastOneCourse => {
+                "Dönem başına sadece 1 ders bırakabilirsiniz."
+            }
+            KnownResultCode::CrnListEmpty => "CRN listesi boş göründüğünden alınamadı.",
+            KnownResultCode::CrnNotFound => "CRN bulunamadığından dolayı alınamadı.",
+            KnownResultCode::SuccessfullyAdded => "Ekleme işlemi başarıyla tamamlandı.",
+            KnownResultCode::SuccessfullyDropped => "Silme işlemi başarıyla tamamlandı.",
+        }
+    }
+}
+
+impl Display for KnownResultCode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.description())
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct UnknownResultCode(Value);
+
+impl Display for UnknownResultCode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Bilinmeyen Sonuç ({})", self.0)
+    }
+}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(untagged)]
 enum ResultCode {
     Known(KnownResultCode),
     Unknown(UnknownResultCode),
+}
+
+impl Display for ResultCode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ResultCode::Known(k) => write!(f, "{}", k),
+            ResultCode::Unknown(u) => write!(f, "{}", u),
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -150,6 +232,12 @@ struct CrnAddResult {
     result_data: Option<ResultData>,
 }
 
+impl Display for CrnAddResult {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "CRN {}: {}", self.crn, self.result_code)
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct CrnDropResult {
     crn: String,
@@ -167,6 +255,12 @@ struct CrnDropResult {
     result_data: Option<ResultData>,
 }
 
+impl Display for CrnDropResult {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "CRN {}: {}", self.crn, self.result_code)
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct CourseSelectionResponseBody {
     #[serde(rename = "ecrnResultList")]
@@ -174,4 +268,20 @@ pub struct CourseSelectionResponseBody {
 
     #[serde(rename = "scrnResultList")]
     scrn_result_list: Vec<CrnDropResult>,
+}
+
+impl Display for CourseSelectionResponseBody {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "Eklenen CRN Sonuçları")?;
+        self.ecrn_result_list
+            .iter()
+            .try_for_each(|e| writeln!(f, "{}", e))?;
+
+        writeln!(f, "Çıkarılan CRN Sonuçları")?;
+        self.scrn_result_list
+            .iter()
+            .try_for_each(|e| writeln!(f, "{}", e))?;
+
+        Ok(())
+    }
 }
