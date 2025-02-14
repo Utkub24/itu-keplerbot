@@ -138,11 +138,19 @@ impl Requester {
         println!("Ders seçiliyor...");
 
         let request = self.build_course_selection_request(&jwt)?;
-        let res = self.send_request(&request).await?;
 
-        let res_body: CourseSelectionResponseBody = serde_json::from_slice(&res.bytes().await?)?;
+        const TRY_COUNT: u64 = 100;
+        println!("{} kere denenecek.", TRY_COUNT);
 
-        println!("{}", res_body);
+        for i in 1..=TRY_COUNT {
+            let res = self.send_request(&request).await?;
+
+            let res_body: CourseSelectionResponseBody =
+                serde_json::from_slice(&res.bytes().await?)?;
+
+            println!("{}. Deneme", i);
+            println!("{}", res_body);
+        }
 
         Ok(())
     }
