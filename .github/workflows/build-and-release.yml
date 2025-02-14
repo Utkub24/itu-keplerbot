@@ -1,0 +1,48 @@
+name: Build and release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version'
+        required: true
+        type: string
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-and-release:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            binary_extension: ''
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            binary_extension: '.exe'
+          - os: macos-latest-xlarge
+            target: aarch64-apple-darwin
+            binary_extension: ''
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Build
+      run: cargo build --release --target ${{ matrix.target }}
+      
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v${{ github.event.inputs.version }}
+        name: Release v${{ github.event.inputs.version }}
+        draft: false
+        prerelease: false
+        files: |
+          target/${{ matrix.target }}/release/itu-keplerbot${{ matrix.binary_extension }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
