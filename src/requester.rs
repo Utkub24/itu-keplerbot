@@ -1,4 +1,4 @@
-use chrono::{DateTime, FixedOffset, TimeDelta, Utc};
+use chrono::{DateTime, Duration, FixedOffset, TimeDelta, Utc};
 use reqwest::{Client, Request, RequestBuilder, Response};
 use scraper::Html;
 use serde::{Deserialize, Serialize};
@@ -78,6 +78,8 @@ impl Requester {
     const COURSE_SELECT_URL: &str = "https://obs.itu.edu.tr/api/ders-kayit/v21";
     const LOGIN_URL: &str = "https://girisv3.itu.edu.tr";
     const FETCH_JWT_URL: &str = "https://obs.itu.edu.tr/ogrenci/auth/jwt";
+    /// Kepler'de ders seçerken 3 saniye beklememız gerekiyor
+    const REQUEST_DELTA: std::time::Duration = std::time::Duration::new(3, 0);
 
     pub fn new(config: Config) -> Self {
         let client = Client::builder()
@@ -150,6 +152,8 @@ impl Requester {
 
             println!("{}. Deneme", i);
             println!("{}", res_body);
+            println!("3 saniye bekleniyor...");
+            thread::sleep(Self::REQUEST_DELTA);
         }
 
         Ok(())
