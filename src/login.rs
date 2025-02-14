@@ -1,3 +1,4 @@
+use scraper::{Html, Selector};
 use serde::{Deserialize, Serialize};
 
 use crate::requester::Config;
@@ -41,6 +42,47 @@ impl LoginFormHiddenFields {
             viewstate_generator,
             event_validation,
         }
+    }
+}
+
+fn get_field_value_attr(document: &Html, selector: &Selector) -> String {
+    document
+        .select(&selector)
+        .next()
+        .and_then(|el| el.value().attr("value"))
+        .unwrap_or_default()
+        .into()
+}
+
+impl From<Html> for LoginFormHiddenFields {
+    fn from(document: Html) -> Self {
+        let event_target_selector =
+            Selector::parse("input[name='__EVENTTARGET']").expect("__EVENTTARGET selector");
+        let event_target = get_field_value_attr(&document, &event_target_selector);
+
+        let event_argument_selector =
+            Selector::parse("input[name='__EVENTARGUMENT']").expect("__EVENTARGUMENT selector");
+        let event_argument = get_field_value_attr(&document, &event_argument_selector);
+
+        let viewstate_selector =
+            Selector::parse("input[name='__VIEWSTATE']").expect("__VIEWSTATE selector");
+        let viewstate = get_field_value_attr(&document, &viewstate_selector);
+
+        let viewstate_generator_selector = Selector::parse("input[name='__VIEWSTATEGENERATOR']")
+            .expect("__VIEWSTATEGENERATOR selector");
+        let viewstate_generator = get_field_value_attr(&document, &viewstate_generator_selector);
+
+        let event_validation_selector =
+            Selector::parse("input[name='__EVENTVALIDATION']").expect("__EVENTVALIDATION selector");
+        let event_validation = get_field_value_attr(&document, &event_validation_selector);
+
+        LoginFormHiddenFields::new(
+            event_target,
+            event_argument,
+            viewstate,
+            viewstate_generator,
+            event_validation,
+        )
     }
 }
 

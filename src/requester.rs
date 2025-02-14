@@ -88,15 +88,6 @@ impl Requester {
     }
 
     pub async fn run(&self) -> Result<(), Box<dyn Error>> {
-        let text = "{\"ecrnResultList\":[{\"crn\":\"22612\",\"operationFinished\":true,\"statusCode\":0,\"resultCode\":\"Ekleme İşlemi Başarılı\",\"resultData\":{}}],\"scrnResultList\":[{\"crn\":\"22612\",\"operationFinished\":true,\"statusCode\":0,\"resultCode\":\"Silme İşlemi Başarılı\",\"resultData\":{}}]}";
-
-        let test: CourseSelectionResponseBody = serde_json::from_str(&text)?;
-
-        println!("{}", test);
-
-        return Ok(());
-
-        print_time_trt();
         let now = now_trt();
         let until = self.config.time.signed_duration_since(now);
         println!("Ders seçimine {} var", until);
@@ -126,59 +117,11 @@ impl Requester {
         let res_body: CourseSelectionResponseBody = serde_json::from_slice(&res.bytes().await?)?;
         println!("{:?}", res_body);
 
-        //println!("{:?}", res_body);
-
         Ok(())
     }
 
-    fn build_login_form_hidden_fields(document: Html) -> LoginFormHiddenFields {
-        let event_target_selector = Selector::parse("input[name='__EVENTTARGET']").unwrap();
-        let event_target = document
-            .select(&event_target_selector)
-            .next()
-            .and_then(|el| el.value().attr("value"))
-            .unwrap_or_default();
-
-        let event_argument_selector = Selector::parse("input[name='__EVENTARGUMENT']").unwrap();
-        let event_argument = document
-            .select(&event_argument_selector)
-            .next()
-            .and_then(|el| el.value().attr("value"))
-            .unwrap_or_default();
-
-        let viewstate_selector = Selector::parse("input[name='__VIEWSTATE']").unwrap();
-        let viewstate = document
-            .select(&viewstate_selector)
-            .next()
-            .and_then(|el| el.value().attr("value"))
-            .unwrap_or_default();
-
-        let viewstate_generator_selector =
-            Selector::parse("input[name='__VIEWSTATEGENERATOR']").unwrap();
-        let viewstate_generator = document
-            .select(&viewstate_generator_selector)
-            .next()
-            .and_then(|el| el.value().attr("value"))
-            .unwrap_or_default();
-
-        let event_validation_selector = Selector::parse("input[name='__EVENTVALIDATION']").unwrap();
-        let event_validation = document
-            .select(&event_validation_selector)
-            .next()
-            .and_then(|el| el.value().attr("value"))
-            .unwrap_or_default();
-
-        LoginFormHiddenFields::new(
-            event_target.to_string(),
-            event_argument.to_string(),
-            viewstate.to_string(),
-            viewstate_generator.to_string(),
-            event_validation.to_string(),
-        )
-    }
-
     fn build_login_form(document: Html, config: Config) -> LoginFormBody {
-        let hidden_fields = Self::build_login_form_hidden_fields(document);
+        let hidden_fields = LoginFormHiddenFields::from(document);
         let input_fields = LoginFormInputFields::from(config);
 
         LoginFormBody::new(hidden_fields, input_fields)
