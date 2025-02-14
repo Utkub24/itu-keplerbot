@@ -1,4 +1,4 @@
-use chrono::{DateTime, Duration, FixedOffset, TimeDelta, Utc};
+use chrono::{DateTime, FixedOffset, TimeDelta, Utc};
 use reqwest::{Client, Request, RequestBuilder, Response};
 use scraper::Html;
 use serde::{Deserialize, Serialize};

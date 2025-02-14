@@ -1,4 +1,4 @@
-use std::{error::Error, path::PathBuf, string::ParseError, time::SystemTime};
+use std::{path::PathBuf, string::ParseError, time::SystemTime};
 
 use clap::{arg, command, Args, Parser, Subcommand};
 use humantime::parse_rfc3339_weak;

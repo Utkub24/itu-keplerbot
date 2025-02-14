@@ -22,10 +22,15 @@ pub struct LoginFormHiddenFields {
 }
 
 impl LoginFormHiddenFields {
+    #[allow(dead_code)]
     const EVENT_TARGET_NAME: &str = "__EVENTTARGET";
+    #[allow(dead_code)]
     const EVENT_ARGUMENT_NAME: &str = "__EVENTARGUMENT";
+    #[allow(dead_code)]
     const VIEWSTATE_NAME: &str = "__VIEWSTATE";
+    #[allow(dead_code)]
     const VIEWSTATE_GENERATOR_NAME: &str = "__VIEWSTATEGENERATOR";
+    #[allow(dead_code)]
     const EVENT_VALIDATION_NAME: &str = "__EVENTVALIDATION";
 
     pub fn new(
