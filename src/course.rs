@@ -1,4 +1,4 @@
-use std::fmt::{write, Display};
+use std::fmt::Display;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -29,6 +29,7 @@ impl From<Config> for CourseSelectionRequestBody {
     }
 }
 
+// Kaynak: https://github.com/AtaTrkgl/itu-ders-secici, https://github.com/MustafaKrc/ITU-CRN-Picker <3
 #[derive(Debug, Serialize, Deserialize, Clone)]
 enum KnownResultCode {
     #[serde(rename = "successResult")]
