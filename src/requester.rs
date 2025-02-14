@@ -87,9 +87,13 @@ impl Requester {
         Self { config, client }
     }
 
-    pub async fn run(&self) -> Result<(), Box<dyn Error>> {
+    fn until(&self) -> TimeDelta {
         let now = now_trt();
-        let until = self.config.time.signed_duration_since(now);
+        self.config.time.signed_duration_since(now)
+    }
+
+    pub async fn run(&self) -> Result<(), Box<dyn Error>> {
+        let until = self.until();
         println!("Ders seçimine {} var", until);
 
         const ONE_MINUTE_DELTA: TimeDelta =
@@ -105,7 +109,6 @@ impl Requester {
         }
 
         print_time_trt();
-
         println!("Kepler'e giriş yapılıyor...");
 
         self.login().await?;
@@ -118,7 +121,19 @@ impl Requester {
 
         println!("API Token başarılı bir şekilde alındı!");
 
-        // TODO: wait until time
+        let until = self.until();
+        println!("Ders seçimine {} var", until);
+
+        const ERROR_MARGIN: TimeDelta = TimeDelta::new(0, 1000000).expect("1ms");
+        let sleep_time = until + ERROR_MARGIN;
+
+        match sleep_time.to_std() {
+            Ok(sleep_time) => {
+                println!("Ders seçimine kadar bekleniyor...");
+                thread::sleep(sleep_time);
+            }
+            Err(_) => println!("Ders seçimi başlamış! Program başlatılıyor..."),
+        }
 
         println!("Ders seçiliyor...");
 
