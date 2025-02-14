@@ -28,7 +28,7 @@ fn parse_time(arg: &str) -> Result<std::time::Duration, ParseError> {
 #[derive(Args, Debug, Clone)]
 pub struct MakeConfigArgs {
     #[arg(short = 'o', long = "output", help = "Output path")]
-    pub output_path: PathBuf,
+    pub output_path: Option<PathBuf>,
 
     #[arg(short = 'u', long = "username", help = "ITÜ Kullanıcı Adı")]
     pub username: String,

@@ -68,10 +68,11 @@ async fn main() {
 
     match cli.command {
         cli::Command::MakeConfig(make_config_args) => {
-            match write_config(
-                make_config_args.output_path.as_path(),
-                &make_config_args.clone().into(),
-            ) {
+            let output_path = make_config_args
+                .output_path
+                .clone()
+                .unwrap_or(PathBuf::from(DEFAULT_CONFIG_PATH));
+            match write_config(&output_path, &make_config_args.clone().into()) {
                 Ok(_) => (),
                 Err(e) => eprintln!("{}", e),
             }
