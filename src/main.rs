@@ -18,8 +18,6 @@ use serde_json;
 const DEFAULT_CONFIG_PATH: &str = "config.json";
 
 async fn run_requester(config_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
-    read_config_file(config_path)?;
-
     let config_file = File::open(config_path)?;
     let config: Config = serde_json::from_reader(config_file)?;
     let requester = Requester::new(config);
@@ -38,7 +36,7 @@ fn write_config(output_path: &Path, config: &Config) -> Result<(), Box<dyn Error
     match File::create_new(output_path) {
         Ok(file) => {
             write_config_to_file(&file, config)?;
-            println!("Dosya {} konumuna yazıldı", output_path.display());
+            println!("Ayarlar {} dosyasına yazıldı.", output_path.display());
             Ok(())
         }
         Err(e) => match e.kind() {
@@ -55,6 +53,7 @@ fn write_config(output_path: &Path, config: &Config) -> Result<(), Box<dyn Error
     }
 }
 
+#[allow(dead_code)]
 fn read_config_file(config_path: &Path) -> Result<(), Box<dyn Error>> {
     let file = File::open(config_path)?;
     let config: Config = serde_json::from_reader(file)?;
@@ -73,7 +72,7 @@ async fn main() {
                 make_config_args.output_path.as_path(),
                 &make_config_args.clone().into(),
             ) {
-                Ok(_) => println!("yay!"),
+                Ok(_) => (),
                 Err(e) => eprintln!("{}", e),
             }
         }
@@ -85,8 +84,10 @@ async fn main() {
             )
             .await
             {
-                Ok(_) => println!("success!"),
-                Err(e) => eprintln!("{}", e),
+                Ok(_) => println!(
+                    "Program başarıyla sonlandı. Umarım derslerini alabilmişsindir! <3 :pray:"
+                ),
+                Err(e) => eprintln!("Özür dilerim ama program hatalı sonlandı: {}", e),
             }
         }
     }

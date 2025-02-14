@@ -1,8 +1,8 @@
 use chrono::{DateTime, FixedOffset, TimeDelta, Utc};
-use reqwest::{cookie::Jar, Client, Request, RequestBuilder, Response};
-use scraper::{Html, Selector};
+use reqwest::{Client, Request, RequestBuilder, Response};
+use scraper::Html;
 use serde::{Deserialize, Serialize};
-use std::{error::Error, sync::Arc, thread};
+use std::{error::Error, thread};
 
 use crate::{
     cli::MakeConfigArgs,
@@ -101,21 +101,33 @@ impl Requester {
                 println!("Ders seçimine 1 dakika kalana kadar bekleniyor...");
                 thread::sleep(sleep_time);
             }
-            Err(_) => println!("Ders seçimine 1 dakikadan az var"),
+            Err(_) => println!("Ders seçimine 1 dakikadan az var, program başlatılıyor..."),
         }
 
         print_time_trt();
 
+        println!("Kepler'e giriş yapılıyor...");
+
+        self.login().await?;
+
+        println!("Kepler'e giriş başarılı!");
+
         println!("API Token alınıyor...");
+
         let jwt = self.fetch_jwt().await?;
-        println!("API Token başarılı bir şekilde alındı");
-        let request = self.build_course_selection_request(&jwt)?;
+
+        println!("API Token başarılı bir şekilde alındı!");
+
+        // TODO: wait until time
 
         println!("Ders seçiliyor...");
+
+        let request = self.build_course_selection_request(&jwt)?;
         let res = self.send_request(&request).await?;
-        println!("{:?}", res);
+
         let res_body: CourseSelectionResponseBody = serde_json::from_slice(&res.bytes().await?)?;
-        println!("{:?}", res_body);
+
+        println!("{}", res_body);
 
         Ok(())
     }
@@ -145,8 +157,6 @@ impl Requester {
     }
 
     async fn fetch_jwt(&self) -> Result<String, reqwest::Error> {
-        self.login().await?; // TODO: check if already logged in (?)
-
         // first request sets cookies
         let _ = self.client.get(Self::FETCH_JWT_URL).send().await?;
 
