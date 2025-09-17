@@ -6,10 +6,12 @@
 
 ## Nasıl Kullanılır
 
-1. Öncelikle sayfanın sağındaki 'Releases' kısmından uygulamanın son versiyonunu indirin. Windows kullanıyorsanız `itu-keplerbot.exe` adlı dosyayı, Linux kullanıyorsanız ise `itu-keplerbot` adlı dosyayı indirmelisiniz.
+1. Öncelikle sayfanın sağındaki 'Releases' kısmından uygulamanın son versiyonunu indirin.
+  - Windows kullanıyorsanız `itu-keplerbot-VERSIYON-windows-x64.zip` adlı dosyayı indirin, içerisindeki `itu-keplerbot.exe` uygulamasını dışarıya aktarın.
+  - Linux kullanıyorsanız `itu-keplerbot-VERSIYON-linux-x64.zip` adlı dosyayı indirin, içersindeki  `itu-keplerbot` uygulamasını dışarıya aktarın.
+  - Mac (Intel) kullanıyorsanız `itu-keplerbot-VERSIYON-macos-x64.zip` adlı dosyayı indirin, içersindeki  `itu-keplerbot` uygulamasını dışarıya aktarın.
+  - Mac (ARM / M Serisi) kullanıyorsanız `itu-keplerbot-VERSIYON-macos-arm64.zip` adlı dosyayı indirin, içersindeki  `itu-keplerbot` uygulamasını dışarıya aktarın.
 
-> [!NOTE]  
-> MacOS kullanan arkadaşlar uygulamayı [kendileri derlemelidirler](#derlemek-için). Maalesef GitHub ücretsiz bir şekilde MacOS runner sağlamıyor :(
 
 2. Şimdi gerekli bilgileri programa girmelisiniz. Bunu komut satırını kullanarak veya elle girerek yapabilirsiniz.
 
